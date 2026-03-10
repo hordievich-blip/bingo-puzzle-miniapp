@@ -231,20 +231,23 @@ export default function Home(){
           </div>
 
           {playerLink && (
-            <div style={{marginTop: 12}}>
-              <div style={styles.hint}>Скопіюйте і надішліть цей лінк гравцю:</div>
-              <input
-                style={{...styles.input, width:"100%"}}
-                value={playerLink}
-                readOnly
-                onFocus={e => e.target.select()}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  <div style={{marginTop:10}}>
+    <div>
+      <a href={playerLink} target="_blank">
+        {playerLink}
+      </a>
+    </div>
+
+    <div style={{marginTop:8}}>
+      <a
+        href={`https://t.me/share/url?url=${encodeURIComponent(playerLink)}`}
+        target="_blank"
+      >
+        Share in Telegram
+      </a>
+    </div>
+  </div>
+)}
 
   /* ===== player UI ===== */
   return (
