@@ -113,25 +113,28 @@ export default function Home(){
   }
 
   async function toggleCell(i){
-    if (!playerId) return;
+  if (!playerId) return;
 
-    // optimistic UI
-    setPlayer(prev => {
-      if (!prev) return prev;
-      const done = prev.done.slice();
-      done[i] = !done[i];
-      return { ...prev, done, updatedAt: Date.now() };
-    });
-
+  try {
     const r = await fetch("/api/player-toggle", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ playerId, index: i })
     });
-    if (!r.ok){
-      await loadPlayer(playerId); // відкат до серверної правди
+
+    const data = await r.json();
+
+    if (!r.ok) {
+      throw new Error(data?.error || "Не вдалося оновити клітинку");
     }
+
+    // після успішного оновлення на сервері підтягуємо актуальний стан
+    await loadPlayer(playerId);
+
+  } catch (e) {
+    alert(e.message || String(e));
   }
+}
 
   /* ===== auto-load & polling ===== */
   useEffect(() => {
