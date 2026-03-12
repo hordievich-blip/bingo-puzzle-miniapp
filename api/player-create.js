@@ -11,14 +11,17 @@ export default async function handler(req, res){
   const imageDataUrl = typeof req.body?.imageDataUrl === "string" ? req.body.imageDataUrl : null;
 
   if (!gameId) return res.status(400).json({ error: "gameId required" });
+
   const game = await kv.get(`game:${gameId}`);
   if (!game) return res.status(404).json({ error: "Game not found" });
 
   const need = game.n * game.n;
   const playerId = makeId("PLR");
+  const adminKey = makeId("ADM");
 
   const player = {
     playerId,
+    adminKey,
     gameId,
     imageDataUrl,
     done: Array(need).fill(false),
@@ -26,5 +29,6 @@ export default async function handler(req, res){
   };
 
   await kv.set(`player:${playerId}`, player);
-  return res.json({ playerId });
+
+  return res.json({ playerId, adminKey });
 }
