@@ -26,21 +26,38 @@ function shuffle(arr){
 }
 
 export default async function handler(req, res){
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
+  const name = String(req.body?.name || "").trim();
   const n = clampInt(req.body?.n ?? 5, 2, 10);
   const tasks = cleanTasks(req.body?.tasksText);
   const need = n * n;
 
+  if (!name){
+    return res.status(400).json({ error: "Вкажіть назву гри." });
+  }
+
   if (tasks.length < need){
-    return res.status(400).json({ error: `Потрібно щонайменше ${need} завдань (зараз: ${tasks.length}).` });
+    return res.status(400).json({
+      error: `Потрібно щонайменше ${need} завдань (зараз: ${tasks.length}).`
+    });
   }
 
   const idx = shuffle([...Array(tasks.length).keys()]).slice(0, need);
 
   const gameId = makeId("GAME");
-  const game = { gameId, n, tasks, order: idx, createdAt: Date.now() };
+  const game = {
+    gameId,
+    name,
+    n,
+    tasks,
+    order: idx,
+    createdAt: Date.now()
+  };
 
   await kv.set(`game:${gameId}`, game);
+
   return res.json({ gameId });
 }

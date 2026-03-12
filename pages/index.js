@@ -29,6 +29,7 @@ export default function Home(){
 
   /* ===== admin state ===== */
   const [n, setN] = useState(5);
+  const [gameName, setGameName] = useState("");
   const [tasksText, setTasksText] = useState("");
   const [gameId, setGameId] = useState("");
   const [imageDataUrl, setImageDataUrl] = useState(null);
@@ -49,6 +50,11 @@ export default function Home(){
     const tasks = cleanTasks(tasksText);
     const needLocal = n * n;
 
+    if (!gameName.trim()){
+      alert("Вкажіть назву гри.");
+      return;
+    }
+
     if (tasks.length < needLocal){
       alert(`Потрібно щонайменше ${needLocal} завдань (зараз: ${tasks.length}).`);
       return;
@@ -60,7 +66,11 @@ export default function Home(){
       const r = await fetch("/api/game-create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ n, tasksText })
+        body: JSON.stringify({
+          name: gameName,
+          n,
+          tasksText
+        })
       });
 
       const data = await r.json();
@@ -107,11 +117,12 @@ export default function Home(){
         throw new Error(data?.error || "Помилка створення гравця");
       }
 
-      const viewerUrl = new URL(window.location.href);
-      viewerUrl.searchParams.set("player", data.playerId);
-      viewerUrl.searchParams.delete("admin");
+      const baseUrl = `${window.location.origin}${window.location.pathname}`;
 
-      const adminUrl = new URL(window.location.href);
+      const viewerUrl = new URL(baseUrl);
+      viewerUrl.searchParams.set("player", data.playerId);
+
+      const adminUrl = new URL(baseUrl);
       adminUrl.searchParams.set("player", data.playerId);
       adminUrl.searchParams.set("admin", data.adminKey);
 
@@ -268,16 +279,6 @@ export default function Home(){
       textAlign: "center",
       background: "#fff"
     },
-    badge: {
-      position: "absolute",
-      top: 8,
-      left: 8,
-      background: "rgba(0,0,0,.06)",
-      padding: "6px 8px",
-      borderRadius: 999,
-      fontSize: 12,
-      fontWeight: 700
-    },
     hint: {
       color: "rgba(0,0,0,.6)",
       fontSize: 13,
@@ -292,11 +293,22 @@ export default function Home(){
         <div style={{ ...styles.card, marginBottom: 14 }}>
           <h2>Адмін</h2>
           <p style={styles.hint}>
-            Створіть гру зі спільними завданнями, потім створіть окремого гравця з персональною картинкою.
+            Створіть гру зі спільними завданнями, задайте їй назву, а потім створіть окремого гравця з персональною картинкою.
           </p>
         </div>
 
         <div style={{ ...styles.card, marginBottom: 14 }}>
+          <div style={{ marginBottom: 10 }}>
+            <div style={styles.hint}>Назва гри</div>
+            <input
+              style={{ ...styles.input, width: "100%" }}
+              type="text"
+              value={gameName}
+              onChange={e => setGameName(e.target.value)}
+              placeholder="Наприклад: Великоднє бінго"
+            />
+          </div>
+
           <div style={styles.row}>
             <label>Розмір N×N:</label>
             <input
@@ -409,6 +421,10 @@ export default function Home(){
           <div style={styles.hint}>Завантажте дані гравця.</div>
         ) : (
           <>
+            <div style={{ marginBottom: 10 }}>
+              <h3 style={{ margin: 0 }}>{game.name || "Без назви"}</h3>
+            </div>
+
             <div style={styles.hint}>
               Прогрес: <b>{player.done.filter(Boolean).length}</b> / <b>{need}</b>
             </div>
@@ -438,7 +454,6 @@ export default function Home(){
                     }}
                     onClick={() => adminKey && toggleCell(i)}
                   >
-                    <div style={styles.badge}>{r + 1}:{c + 1}</div>
                     {!done && (
                       <div style={{ fontWeight: 650, fontSize: 14, lineHeight: 1.2 }}>
                         {text}
